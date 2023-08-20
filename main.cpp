@@ -2,32 +2,42 @@
 
 
 DigitalOut myled(LED1);
-Serial pc(USBRX, USBTX);
-Serial dev(p9, p10);
+BufferedSerial pc(USBTX, USBRX);
+BufferedSerial dev(D1, D0);
 
 void dev_recv(){
-    while(dev.readable()){
-        pc.putc(dev.getc())    
-    }    
+    while(1){
+        char recv_data;
+        if (dev.read(&recv_data, 1) > 0){
+        pc.write(&recv_data, 1);
+        }
+
+    }  
 }
 
 void pc_recv(){
-    while(pc.readable()){
-        dev.putc(pc.getc());    
+    while(1) {
+        char recv_data;
+    if (pc.read(&recv_data, 1) > 0){
+        dev.write(&recv_data, 1); 
+    }   
     }    
 }
 
 int main() {
-    pc.baud(9600);
-    device1.baud(115200);
-    pc.attach(&pc_recv);
-    dev.atach(&dev);
-    pc.printf("Hello!! \r\n");
+    pc.set_baud(9600);
+    dev.set_baud(115200);
+    Thread pc_thread;
+    Thread dev_thread;
+
+    pc_thread.start(pc_recv);
+    dev_thread.start(dev_recv);
+    
+    printf("Hello!! \r\n");
     
     while(1) {
-        myled = 1;
-        wait(1);
-        myled = 0;
-        wait(1);
+        myled = !myled;
+        wait_us(10000);
+    
     }
 }
